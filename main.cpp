@@ -8,7 +8,7 @@ using namespace std;
 
 #define PI 3.1415
 
-static int Rot_rodas = 0, Rot_carro = 0;
+static int Rot_rodas = 0, Rot_carro = 0, Rot_cam = 0;
 static float Trans_carro_x = 0.0, Trans_carro_z = 0.0, Velocidade = 0.0;
 GLfloat angle = 60, fAspect;
 
@@ -61,11 +61,30 @@ void Carro(int rot_carro, float trans_x,float trans_z){
 void Rodas(int rot_rodas, int rot_carro, float trans_x,float trans_z){
   CarregarArquivo modelo;
   modelo.Carregar("E:/UFOP/TrabalhoFinalCG/tire.obj");
+  glColor3f(0.0,0.0,0.0);
+
   glPushMatrix();
-  glRotatef(rot_rodas,0.0,1.0,0.0);
-  glTranslatef(trans_x - 2.5,0.0,trans_z - 2.3);
-  glColor3f(0.02,0.1,0.06);
-  myModel(0.15, modelo);
+    glTranslatef(trans_x - (2.3 * cos(rot_carro* PI/180) + 2.6 * sin(rot_carro* PI/180)),0.0,trans_z - (2.6 * cos(rot_carro* PI/180) - 2.3 * sin (rot_carro * PI/180)));
+    glRotatef(rot_carro,0.0,1.0,0.0);
+    myModel(0.15, modelo);
+  glPopMatrix();
+
+  glPushMatrix();
+    glTranslatef(trans_x - (-2.3 * cos(rot_carro* PI/180) + 2.6 * sin(rot_carro* PI/180)),0.0,trans_z - (2.6 * cos(rot_carro* PI/180) + 2.3 * sin (rot_carro * PI/180)));
+    glRotatef(rot_carro + 180,0.0,1.0,0.0);
+    myModel(0.15, modelo);
+  glPopMatrix();
+
+  glPushMatrix();
+    glTranslatef(trans_x - (2.3 * cos(rot_carro* PI/180) - 2.6 * sin(rot_carro* PI/180)),0.0,trans_z - (-2.6 * cos(rot_carro* PI/180) - 2.3 * sin (rot_carro * PI/180)));
+    glRotatef(rot_carro + rot_rodas,0.0,1.0,0.0);
+    myModel(0.15, modelo);
+  glPopMatrix();
+
+  glPushMatrix();
+    glTranslatef(trans_x - (-2.3 * cos(rot_carro* PI/180) - 2.6 * sin(rot_carro* PI/180)),0.0,trans_z - (-2.6 * cos(rot_carro* PI/180) + 2.3 * sin (rot_carro * PI/180)));
+    glRotatef(rot_carro + rot_rodas,0.0,1.0,0.0);
+    myModel(0.15, modelo);
   glPopMatrix();
 }
 
@@ -74,13 +93,12 @@ void Desenha(void){
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0,10,Trans_carro_z - 20, Trans_carro_x,0,Trans_carro_z, 0,1,0);
-    //gluLookAt(Trans_carro_x - 20 * sin(Rot_carro*PI/180),10,Trans_carro_z - 20 * cos(Rot_carro*PI/180), Trans_carro_x,0,Trans_carro_z, 0,1,0); // Especifica posição do observador e do alvo
+    gluLookAt(Trans_carro_x - 20 * sin(Rot_cam*PI/180),10,Trans_carro_z - 20 * cos(Rot_cam*PI/180), Trans_carro_x,0,Trans_carro_z, 0,1,0); // Especifica posição do observador e do alvo
 
     glPushMatrix();
     Piso(1.0, -2.0);
-    Carro(Rot_rodas, Trans_carro_x, Trans_carro_z);
-    Rodas(Rot_rodas, Rot_rodas, Trans_carro_x, Trans_carro_z);
+    Carro(Rot_carro, Trans_carro_x, Trans_carro_z);
+    Rodas(Rot_rodas, Rot_carro, Trans_carro_x, Trans_carro_z);
 
     glPopMatrix();
     glutSwapBuffers();
@@ -92,7 +110,7 @@ void Teclado(unsigned char key, int x, int y){
     case 's':
       if (Velocidade > 0.2)
         Velocidade -= 0.3;
-      else if (Velocidade > 0)
+      else if (Velocidade > -0.2)
         Velocidade -= -0.1;
       else
         Velocidade = 0.0;
@@ -106,21 +124,34 @@ void Teclado(unsigned char key, int x, int y){
       break;
 
     case 'a':
-      Rot_rodas = (Rot_rodas + 10) % 360;
+      if (Rot_rodas < 55)
+        Rot_rodas = (Rot_rodas + 5) % 360;
       glutPostRedisplay();
       break;
 
     case 'd':
-      Rot_rodas = (Rot_rodas - 10) % 360;
+      if (Rot_rodas > -55)
+        Rot_rodas = (Rot_rodas - 5) % 360;
       glutPostRedisplay();
       break;
   }
 }
 
 void idle(){
+if (Velocidade > 0){
+    if (Rot_carro < Rot_rodas)
+        Rot_carro += 2.5;
+    else if (Rot_carro > Rot_rodas)
+        Rot_carro -= 2.5;
+
+    if (Rot_carro > Rot_cam)
+        Rot_cam += 1.25;
+    else if (Rot_carro < Rot_cam)
+        Rot_cam -= 1.25;
+}
+
   Trans_carro_x = Trans_carro_x + Velocidade*sin(Rot_carro*PI/180);
   Trans_carro_z = Trans_carro_z + Velocidade*cos(Rot_carro*PI/180);
-
   glutPostRedisplay();
 }
 
@@ -139,7 +170,7 @@ int main(int argc, char** argv){
   glutInitWindowSize (800, 800);
   glutInitWindowPosition ((1280 - 800)/2, (800 - 800)/2);
 
-  glutCreateWindow ("Computação Gráfica: Movimento e Perspectiva");
+  glutCreateWindow ("Computação Gráfica: Trabalho Final");
 
   Inicializa();
   glutDisplayFunc(Desenha);
