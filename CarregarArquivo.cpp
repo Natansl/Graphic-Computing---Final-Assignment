@@ -15,17 +15,30 @@ public:
     vector<vector<GLfloat> > normais;   //guarda as normais
     vector<vector<GLfloat> > texturas;  //guarda as texturas
     vector<vector<vector<GLint> > > faces; //guarda as faces
-    void Carregar(char in[]){
+
+
+
+    CarregarArquivo()
+    {
+
+
+    }
+
+    void Carregar(char in[])
+    {
+        string *tPonteiro = new string;
+        string &t = *tPonteiro;
 
         ifstream arquivo(in);
+        //string t;
         if(!arquivo)
             cout << "Erro ao ler o arquivo";
         char lido;
         arquivo.get(lido); // pega o primeiro char
 
-
         while(arquivo)
         {
+
 
             if(lido == 'v') // olha se é um v,vn ou vt
             {
@@ -80,18 +93,21 @@ public:
 
                 }
             }
+
             if(lido == 'f')
             {
                 vector<vector<GLint> > face; // a face pode ter qualquer numero de vertices...
                 arquivo.get(lido);
+
                 if(lido == ' ')
                 {
+
                     bool barras = true;
 
-                    string t;
+                    //string t;
                     getline(arquivo,t);
 
-                    unsigned int found = t.find("//");
+                    int found = t.find("//");
 
                     if (found!=string::npos) //vertices e normal
                     {
@@ -100,8 +116,8 @@ public:
                         GLint valor_inteiro ;
                         int valor = 0;
                         int numero = 10;
-
-                        for(unsigned int i = 0 ; i < t.size(); i++)
+                        int posi = 0;
+                        for(int i = 0 ; i < t.size(); i++)
                         {
                             char ch = t[i];
                             if(ch >= '0' && ch <= '9')
@@ -167,9 +183,9 @@ public:
                             GLint valor_inteiro ;
                             int valor = 0;
                             int numero = 10;
+                            int posi = 0;
 
-
-                            for(unsigned int i = 0 ; i < t.size(); i++)
+                            for(int i = 0 ; i < t.size(); i++)
                             {
 
                                 char ch = t[i];
@@ -234,8 +250,9 @@ public:
                             GLint valor_inteiro ;
                             int valor = 0;
                             int numero = 10;
+                            int posi = 0;
 
-                            for(unsigned int i = 0 ; i < t.size(); i++)
+                            for(int i = 0 ; i < t.size(); i++)
                             {
 
                                 char ch = t[i];
@@ -305,6 +322,7 @@ public:
             arquivo.get(lido);
 
         }
+
 
     }
 };
