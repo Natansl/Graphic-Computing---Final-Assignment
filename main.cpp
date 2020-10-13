@@ -14,15 +14,12 @@ static float Trans_carro_x = 0.0, Trans_carro_z = 0.0, Velocidade = 0.0;
 GLfloat angle = 60, fAspect;
 GLint filtro = GL_NEAREST;
 float final = 1.0;
-GLuint textura_id;
-GLubyte textImg[512][512][3];
 
-void Inicializa(void){
-  glClearColor (1.0, 1.0, 1.0, 0.0);
-  glColor3f(0.4, 0.30, 0.68);
-  angle = 60;
-  glEnable(GL_DEPTH_TEST);
-}
+static GLubyte lado[2560][1920][3];
+static GLubyte textImg[512][512][3];
+static CarregarArquivo modeloCarro;
+static CarregarArquivo modeloRodas;
+static GLuint textura_id, textura_id2;
 
 void DefineIluminacao (void)
 {
@@ -46,7 +43,7 @@ void DefineIluminacao (void)
     glLightfv(GL_LIGHT0, GL_POSITION, posicaoLuz );
 }
 
-void Piso(float scale, float height){
+void carregarText(){
     try{
         ifstream arq("E:/UFOP/TrabalhoFinalCG/wall.bmp" ,ios::binary);
         char c;
@@ -70,7 +67,6 @@ void Piso(float scale, float height){
     }catch(...){
         cout << "Erro ao ler imagem" << endl;
     }
-
     glGenTextures(1,&textura_id);
     glBindTexture(GL_TEXTURE_2D, textura_id);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, 512, 512, 0, GL_RGB,GL_UNSIGNED_BYTE, textImg);
@@ -78,6 +74,39 @@ void Piso(float scale, float height){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    try{
+        ifstream arq("E:/UFOP/TrabalhoFinalCG/5cc42deac977e.bmp" ,ios::binary);
+        char c;
+        if(!arq)
+            cout << "Erro ao abrir";
+        for(int i = 0; i < 138 ; i++)
+            c = arq.get();
+        for(int i = 0; i < 2560 ; i++)
+            for(int j = 0; j < 1920 ; j++)
+            {
+                c = arq.get();
+                lado[i][j][2] = c;
+                c =  arq.get();
+                lado[i][j][1] = c ;
+                c =  arq.get();
+                lado[i][j][0] = c;
+            }
+
+        arq.close();
+        arq.clear();
+    }catch(...){
+        cout << "Erro ao ler imagem" << endl;
+    }
+
+    glGenTextures(1,&textura_id2);
+    glBindTexture(GL_TEXTURE_2D, textura_id2);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, 2560, 1920, 0, GL_RGB,GL_UNSIGNED_BYTE, lado);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+}
+
+void Piso(float scale, float height){
 
     glPushMatrix();
     glTranslatef(0.0, height, 0.0);
@@ -100,6 +129,59 @@ void Piso(float scale, float height){
     glPopMatrix();
 }
 
+void Skybox(float scale){
+
+    glPushMatrix();
+    glScalef(scale,scale,scale);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textura_id2);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+    glBegin(GL_POLYGON); //Face frontal
+    glNormal3f(0,0,1); // Normal da face
+    glTexCoord2f(0.75,0.66); glVertex3f(100.0, 30.00, 100.0);
+    glTexCoord2f(0.75,0.33); glVertex3f(100.00, -1.0, 100.0);
+    glTexCoord2f(1.0,0.33); glVertex3f(-100.00, -1.0, 100.0);
+    glTexCoord2f(1.0,0.66); glVertex3f(-100.0, 30.0, 100.0);
+    glEnd();
+
+    glBegin(GL_POLYGON); //Face Posterior
+    glNormal3f(0,0,-1); // Normal da face
+    glTexCoord2f(0.5,0.66); glVertex3f(100.0, 30.00, -100.0);
+    glTexCoord2f(0.5,0.33); glVertex3f(100.00, -1.0, -100.0);
+    glTexCoord2f(0.25,0.33); glVertex3f(-100.00, -1.0, -100.0);
+    glTexCoord2f(0.25,0.66); glVertex3f(-100.0, 30.0, -100.0);
+    glEnd();
+
+    glBegin(GL_POLYGON); //Face Esquerda
+    glNormal3f(-1,0,0); // Normal da face
+    glTexCoord2f(0.75,0.66); glVertex3f(100.0, 30.00, 100.0);
+    glTexCoord2f(0.75,0.33); glVertex3f(100.00, -1.0, 100.0);
+    glTexCoord2f(0.5,0.33); glVertex3f(100.00, -1.0, -100.0);
+    glTexCoord2f(0.5,0.66); glVertex3f(100.0, 30.0, -100.0);
+    glEnd();
+
+    glBegin(GL_POLYGON); //Face Direita
+    glNormal3f(1,0,0); // Normal da face
+    glTexCoord2f(0.0,0.66); glVertex3f(-100.0, 30.00, 100.0);
+    glTexCoord2f(0.0,0.33); glVertex3f(-100.00, -1.0, 100.0);
+    glTexCoord2f(0.25,0.33); glVertex3f(-100.00, -1.0, -100.0);
+    glTexCoord2f(0.25,0.66); glVertex3f(-100.0, 30.0, -100.0);
+    glEnd();
+
+    glBegin(GL_POLYGON); //Face Superior
+    glNormal3f(0,-1,0); // Normal da face
+    glTexCoord2f(0.75,1.0); glVertex3f(100.0, 30.00, 100.0);
+    glTexCoord2f(0.75,0.67); glVertex3f(-100.00, 30.0, 100.0);
+    glTexCoord2f(1.0,0.67); glVertex3f(-100.00, 30.0, -100.0);
+    glTexCoord2f(1.0,1.0); glVertex3f(100.0, 30.0, -100.0);
+    glEnd();
+
+
+    glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
+}
+
 void myModel(float scale, CarregarArquivo modelo){
   glPushMatrix();
   glScalef(scale,scale,scale);
@@ -115,56 +197,60 @@ void myModel(float scale, CarregarArquivo modelo){
 }
 
 void Carro(int rot_carro, float trans_x,float trans_z){
-  CarregarArquivo modelo;
-  modelo.Carregar("E:/UFOP/TrabalhoFinalCG/car.obj");
+
   glPushMatrix();
   glTranslatef(trans_x,0.0,trans_z);
   glRotatef(rot_carro,0.0,1.0,0.0);
   glColor3f(0.45,0.6,0.4);
-  myModel(0.15, modelo);
+  myModel(0.15, modeloCarro);
   glPopMatrix();
 }
 
 void Rodas(int rot_rodas, int rot_carro, float trans_x,float trans_z){
-  CarregarArquivo modelo;
-  modelo.Carregar("E:/UFOP/TrabalhoFinalCG/tire.obj");
   glColor3f(0.0,0.0,0.0);
-
   glPushMatrix();
     glTranslatef(trans_x - (2.3 * cos(rot_carro* PI/180) + 2.6 * sin(rot_carro* PI/180)),0.0,trans_z - (2.6 * cos(rot_carro* PI/180) - 2.3 * sin (rot_carro * PI/180)));
     glRotatef(rot_carro,0.0,1.0,0.0);
-    myModel(0.15, modelo);
+    glRotatef(Velocidade,1.0, 0.0, 0.0);
+    myModel(0.15, modeloRodas);
   glPopMatrix();
 
   glPushMatrix();
     glTranslatef(trans_x - (-2.3 * cos(rot_carro* PI/180) + 2.6 * sin(rot_carro* PI/180)),0.0,trans_z - (2.6 * cos(rot_carro* PI/180) + 2.3 * sin (rot_carro * PI/180)));
     glRotatef(rot_carro + 180,0.0,1.0,0.0);
-    myModel(0.15, modelo);
+    glRotatef(Velocidade,1.0, 0.0, 0.0);
+    myModel(0.15, modeloRodas);
   glPopMatrix();
 
   glPushMatrix();
     glTranslatef(trans_x - (2.3 * cos(rot_carro* PI/180) - 2.6 * sin(rot_carro* PI/180)),0.0,trans_z - (-2.6 * cos(rot_carro* PI/180) - 2.3 * sin (rot_carro * PI/180)));
-    glRotatef(rot_carro + rot_rodas,0.0,1.0,0.0);
-    myModel(0.15, modelo);
+    glRotatef(rot_carro + rot_rodas*1.5,0.0,1.0,0.0);
+    glRotatef(Velocidade,1.0, 0.0, 0.0);
+    myModel(0.15, modeloRodas);
   glPopMatrix();
 
   glPushMatrix();
     glTranslatef(trans_x - (-2.3 * cos(rot_carro* PI/180) - 2.6 * sin(rot_carro* PI/180)),0.0,trans_z - (-2.6 * cos(rot_carro* PI/180) + 2.3 * sin (rot_carro * PI/180)));
-    glRotatef(rot_carro + rot_rodas,0.0,1.0,0.0);
-    myModel(0.15, modelo);
+    glRotatef(rot_carro + rot_rodas*1.5,0.0,1.0,0.0);
+    glRotatef(Velocidade,1.0, 0.0, 0.0);
+    myModel(0.15, modeloRodas);
   glPopMatrix();
 }
 
 void Desenha(void){
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     DefineIluminacao();
+    int flag = 1;
+    if (Velocidade < 0)
+        flag = -1;
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(Trans_carro_x - 20 * sin(Rot_cam*PI/180),10,Trans_carro_z - 20 * cos(Rot_cam*PI/180), Trans_carro_x,0,Trans_carro_z, 0,1,0); // Especifica posição do observador e do alvo
+    gluLookAt(Trans_carro_x - 25 * sin(Rot_cam*PI/180),10,Trans_carro_z - 25 * cos(Rot_cam*PI/180), Trans_carro_x,0, Trans_carro_z, 0,1,0); // Especifica posição do observador e do alvo
 
     glPushMatrix();
-    Piso(5.0, -2.0);
+    Piso(3.0, -1.0);
+    Skybox(3.0);
     Carro(Rot_carro, Trans_carro_x, Trans_carro_z);
     Rodas(Rot_rodas, Rot_carro, Trans_carro_x, Trans_carro_z);
 
@@ -176,49 +262,69 @@ void Desenha(void){
 void Teclado(unsigned char key, int x, int y){
   switch (key) {
     case 's':
-      if (Velocidade > -1)
-        Velocidade -= 0.5;
+      if (Velocidade > -0.25)
+        Velocidade -= 0.25;
       glutPostRedisplay();
       break;
 
     case 'w':
-      if (Velocidade < 5)
-        Velocidade += 1.0;
+      if (Velocidade < 1.25)
+        Velocidade += 0.25;
       glutPostRedisplay();
       break;
 
     case 'a':
-      if (Rot_rodas < 55)
-        Rot_rodas = (Rot_rodas + 5) % 360;
+      if (Rot_rodas < 40)
+        Rot_rodas = (Rot_rodas + 10) % 360;
       glutPostRedisplay();
       break;
 
     case 'd':
-      if (Rot_rodas > -55)
-        Rot_rodas = (Rot_rodas - 5) % 360;
+      if (Rot_rodas > -40)
+        Rot_rodas = (Rot_rodas - 10) % 360;
       glutPostRedisplay();
       break;
   }
 }
 
 void idle(){
+    int inc = 0;
+    if (Rot_rodas > 0 && Rot_rodas < 25)
+        inc = 2;
+    else if (Rot_rodas >= 25 && Rot_rodas <= 45)
+        inc = 3;
+    else if (Rot_rodas < 0 && Rot_rodas > -25)
+        inc = -2;
+    else if (Rot_rodas <= -25 && Rot_rodas > -45)
+        inc = -3;
+
     if (Velocidade > 0)
-        if (Rot_rodas > 0)
-            Rot_carro += 2.5;
-        else if (Rot_rodas < 0)
-            Rot_carro -= 2.5;
+        Rot_carro += inc;
+    else if (Velocidade < 0)
+        Rot_carro -= inc;
 
-    if (Rot_carro - Rot_cam > 25)
-        Rot_cam += 2.5;
-    else if (Rot_carro - Rot_cam < -25)
-        Rot_cam -= 2.5;
+    if (Rot_carro - Rot_cam > 35)
+        Rot_cam += 3;
+    else if (Rot_carro - Rot_cam < -35)
+        Rot_cam -= 3;
+    else if (Rot_carro - Rot_cam > 20)
+        Rot_cam += 2;
+    else if(Rot_carro - Rot_cam < -20)
+        Rot_cam -= 2;
     else if (Rot_carro > Rot_cam)
-        Rot_cam += 1.25;
+        Rot_cam += 1;
     else if (Rot_carro < Rot_cam)
-        Rot_cam -= 1.25;
+        Rot_cam -= 1;
 
-  Trans_carro_x = Trans_carro_x + Velocidade*sin((Rot_carro + Rot_rodas)*PI/180);
-  Trans_carro_z = Trans_carro_z + Velocidade*cos((Rot_carro + Rot_rodas)*PI/180);
+    if (Velocidade > 0){
+        Trans_carro_x = Trans_carro_x + Velocidade*sin((Rot_carro + Rot_rodas)*PI/180);
+        Trans_carro_z = Trans_carro_z + Velocidade*cos((Rot_carro + Rot_rodas)*PI/180);
+
+    }else {
+        Trans_carro_x = Trans_carro_x + Velocidade*sin((Rot_carro - Rot_rodas)*PI/180);
+        Trans_carro_z = Trans_carro_z + Velocidade*cos((Rot_carro - Rot_rodas)*PI/180);
+    }
+
   glutPostRedisplay();
 }
 
@@ -229,6 +335,17 @@ void AlteraTamanhoJanela (int w, int h){
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
   gluPerspective(65, (GLfloat) w/(GLfloat) h, 0.5, 500);
+}
+
+void Inicializa(void){
+  glClearColor (1.0, 1.0, 1.0, 0.0);
+  glColor3f(0.4, 0.30, 0.68);
+  angle = 60;
+  glEnable(GL_DEPTH_TEST);
+
+  carregarText();
+  modeloCarro.Carregar("E:/UFOP/TrabalhoFinalCG/car.obj");
+  modeloRodas.Carregar("E:/UFOP/TrabalhoFinalCG/tire.obj");
 }
 
 int main(int argc, char** argv){
