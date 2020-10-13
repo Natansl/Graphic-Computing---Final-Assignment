@@ -18,8 +18,9 @@ float final = 1.0;
 static GLubyte lado[2560][1920][3];
 static GLubyte textImg[512][512][3];
 static CarregarArquivo modeloCarro;
+static CarregarArquivo modeloVidros;
 static CarregarArquivo modeloRodas;
-static GLuint textura_id, textura_id2;
+static GLuint textura_id, textura_id2, textura_id3;
 
 void DefineIluminacao (void)
 {
@@ -183,17 +184,26 @@ void Skybox(float scale){
 }
 
 void myModel(float scale, CarregarArquivo modelo){
-  glPushMatrix();
-  glScalef(scale,scale,scale);
-  for (unsigned int j = 0; j < (modelo.faces).size(); ++j){
-    glBegin ( GL_POLYGON );
-    for (unsigned int i = 0; i < (modelo.faces[j]).size() ; ++i ){
-      GLfloat vert[3] = {(modelo.vertices[modelo.faces[j][i][0]][0]),(modelo.vertices[modelo.faces[j][i][0]][1]),(modelo.vertices[modelo.faces[j][i][0]][2])};
-      glVertex3fv ( vert );
+    glPushMatrix();
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textura_id3);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glScalef(scale,scale,scale);
+    for (unsigned int j = 0; j < (modelo.faces).size(); ++j){
+        glBegin ( GL_POLYGON );
+        for (unsigned int i = 0; i < (modelo.faces[j]).size() ; ++i ){
+            GLfloat vert[3] = {(modelo.vertices[modelo.faces[j][i][0]][0]),(modelo.vertices[modelo.faces[j][i][0]][1]),(modelo.vertices[modelo.faces[j][i][0]][2])};
+            GLfloat nor[3] =  {(modelo.normais[modelo.faces[j][i][2]][0]),(modelo.normais[modelo.faces[j][i][2]][1]),(modelo.normais[modelo.faces[j][i][2]][2])};
+            GLfloat tex[2] =  { modelo.texturas[modelo.faces[j][i][1]][0],modelo.texturas[modelo.faces[j][i][1]][1]};
+            glTexCoord2fv(tex);
+            glNormal3fv(nor);
+            glVertex3fv(vert);
+        }
+        glEnd();
     }
-    glEnd();
-  }
-  glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
 }
 
 void Carro(int rot_carro, float trans_x,float trans_z){
@@ -202,8 +212,13 @@ void Carro(int rot_carro, float trans_x,float trans_z){
     glTranslatef(trans_x,0.0,trans_z);
     glRotatef(rot_carro,0.0,1.0,0.0);
 
-    glColor3f(0.25,0.5,0.35);
+    glColor3f(0.25,0.75,0.5);
     myModel(0.15, modeloCarro);
+
+    glColor3f(1.0,1.0,1.0);
+    myModel(0.15, modeloVidros);
+
+
   glPopMatrix();
 }
 
@@ -339,14 +354,17 @@ void AlteraTamanhoJanela (int w, int h){
 }
 
 void Inicializa(void){
-  glClearColor (1.0, 1.0, 1.0, 0.0);
-  glColor3f(0.4, 0.30, 0.68);
-  angle = 60;
-  glEnable(GL_DEPTH_TEST);
+    glClearColor (1.0, 1.0, 1.0, 0.0);
+    angle = 60;
+    glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT2);
+    glEnable(GL_DEPTH_TEST);
 
-  carregarText();
-  modeloCarro.Carregar("E:/UFOP/TrabalhoFinalCG/car.obj");
-  modeloRodas.Carregar("E:/UFOP/TrabalhoFinalCG/rodas.obj");
+    carregarText();
+    modeloCarro.Carregar("E:/UFOP/TrabalhoFinalCG/car.obj");
+    modeloRodas.Carregar("E:/UFOP/TrabalhoFinalCG/rodas.obj");
+    modeloVidros.Carregar("E:/UFOP/TrabalhoFinalCG/vidros.obj");
 }
 
 int main(int argc, char** argv){
