@@ -198,11 +198,12 @@ void myModel(float scale, CarregarArquivo modelo){
 
 void Carro(int rot_carro, float trans_x,float trans_z){
 
-  glPushMatrix();
-  glTranslatef(trans_x,0.0,trans_z);
-  glRotatef(rot_carro,0.0,1.0,0.0);
-  glColor3f(0.45,0.6,0.4);
-  myModel(0.15, modeloCarro);
+    glPushMatrix();
+    glTranslatef(trans_x,0.0,trans_z);
+    glRotatef(rot_carro,0.0,1.0,0.0);
+
+    glColor3f(0.25,0.5,0.35);
+    myModel(0.15, modeloCarro);
   glPopMatrix();
 }
 
@@ -345,7 +346,7 @@ void Inicializa(void){
 
   carregarText();
   modeloCarro.Carregar("E:/UFOP/TrabalhoFinalCG/car.obj");
-  modeloRodas.Carregar("E:/UFOP/TrabalhoFinalCG/tire.obj");
+  modeloRodas.Carregar("E:/UFOP/TrabalhoFinalCG/rodas.obj");
 }
 
 int main(int argc, char** argv){
